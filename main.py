@@ -8,7 +8,7 @@ from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkCommonCore import (
     vtkDoubleArray,
     vtkMath,
-    vtkPoints
+    vtkPoints, vtkLookupTable
 )
 from vtkmodules.vtkCommonDataModel import vtkStructuredGrid
 from vtkmodules.vtkFiltersCore import vtkHedgeHog
@@ -20,14 +20,12 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer,
     vtkDataSetMapper
 )
-
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 from vtkmodules.vtkRenderingCore import (
     vtkRenderWindow,
     vtkRenderWindowInteractor,
     vtkRenderer
 )
-
 from vtkmodules.vtkCommonColor import vtkNamedColors
 from vtkmodules.vtkRenderingCore import (
     vtkRenderWindow,
@@ -35,14 +33,15 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer
 )
 
-
 # https://kitware.github.io/vtk-examples/site/Cxx/StructuredGrid/StructuredGrid/
-def main():
+
+
+def main():  # plus utilisé
     colors = vtkNamedColors()
 
     r_min = 0.5
     r_max = 1.0
-    dims = [30,20,10]
+    dims = [30, 20, 10]
 
     # Create the structured grid.
     sgrid = vtkStructuredGrid()
@@ -115,9 +114,74 @@ def main():
     iren.Start()
 
 
-def main2():
+def main2(values):
+    colors = vtkNamedColors()
+
+    nx = len(values)
+    ny = len(values[0])
+
+    dataSize = nx * ny
+    pointValues = vtkDoubleArray()
+    pointValues.SetNumberOfComponents(1)
+    pointValues.SetNumberOfTuples(dataSize)
+    for i in range(dataSize):
+        pointValues.SetValue(i, i)
+
+    numberOfCells = (nx - 1) * (ny - 1)
+    cellValues = vtkDoubleArray()
+    cellValues.SetNumberOfTuples(numberOfCells)
+    for i in range(numberOfCells):
+        cellValues.SetValue(i, i)
+
+    R_terre = 6352800 #m
+    # create point
+    lat_min = 45
+    lon_min = 5
+    lat_max = 47.5
+    lon_max = 7.5
+    d_lat = (lat_max - lat_min)/3001
+    d_lon = (lon_max - lon_min)/3001
+    print(lat_max - lat_min, d_lat)
+    print(lon_max - lon_min, d_lon)
+    curr_lat = lat_min
+    points = vtkPoints()
+    for y in range(ny):
+        curr_lon = lon_max
+        for x in range(nx):
+            r = R_terre + values[x][y]
+            cart_x = r * math.sin(math.radians(curr_lat))*math.cos(math.radians(curr_lon))
+            cart_y = r * math.sin(math.radians(curr_lat))*math.sin(math.radians(curr_lon))
+            cart_z = r * math.cos(math.radians(curr_lat))
+            points.InsertNextPoint(cart_x, cart_y, cart_z)
+            # points.InsertNextPoint(100*x, 100*y, values[x][y])
+            curr_lon -= d_lon
+        curr_lat += d_lat
+
+
+    structGrid = vtkStructuredGrid()
+    structGrid.SetDimensions(nx, ny, 1)
+    structGrid.SetPoints(points)
+    structGrid.GetCellData().scalars = cellValues
+    structGrid.GetPointData().scalars = pointValues
+
+    lut = vtkLookupTable()
+    lut.SetNumberOfTableValues(dataSize)
+    lut.SetTableValue(0, colors.GetColor4d("Green"))
+    lut.Build()
+
+    mapper = vtkDataSetMapper()
+    mapper.SetInputData(structGrid)
+    mapper.SetLookupTable(lut)
+    mapper.SetScalarRange(0, dataSize - 1)
+    mapper.ScalarVisibilityOn()
+
+    actor = vtkActor()
+    actor.SetMapper(mapper)
+
     ren = vtkRenderer()
-    ren.SetBackground(1, 0.9, 0.9)
+    ren.SetBackground(colors.GetColor3d("SlateGray"))
+
+    ren.AddActor(actor)
 
     ren_win = vtkRenderWindow()
     ren_win.AddRenderer(ren)
@@ -133,11 +197,14 @@ def main2():
     iren.Start()
 
 if __name__ == "__main__":
+    # https://kitware.github.io/vtk-examples/site/Cxx/StructuredGrid/StructuredGrid/
+
     file1 = open('altitudes.txt', 'r')
     Lines = file1.readlines()
     Lines = Lines[1:]
     Valeurs = []
     for line in Lines:
         line = line[:-2]
-        Valeurs.append(line.split(' '))
-    main()
+        Valeurs.append([float(el) for el in line.split(' ')])
+
+    main2(Valeurs)

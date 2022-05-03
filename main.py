@@ -34,58 +34,69 @@ from vtkmodules.vtkRenderingCore import (
 
 
 def main(values):
-    if len(values) != len(values[0]):
+    nx = len(values)
+    ny = len(values[0])
+
+    if nx != ny:
         return
 
     colors = vtkNamedColors()
 
-    nx = len(values)
-    ny = len(values[0])
-
-    data_size = nx * ny
     point_values = vtkDoubleArray()
     point_values.SetNumberOfComponents(1)
-    point_values.SetNumberOfTuples(data_size)
-    for i in range(data_size):
-        point_values.SetValue(i, 2)
+    point_values.SetNumberOfTuples(nx * ny)
+    for i in range(nx*ny):
+        point_values.SetValue(i,2)
 
+    min_h = math.inf
+    max_h = 0.0
     angle = 2.5
     r_terre = 6352800
     d_angle = angle / (len(values)-1)
     points = vtkPoints()
     for y in range(ny):
         for x in range(nx):
-            r = r_terre + values[x][y]
-            phi = math.radians(90 + d_angle*x)
-            theta = math.radians(0 + d_angle*y)
+            current = values[x][y]
+            r = r_terre + current
+            phi = math.radians(45 + d_angle*x)
+            theta = math.radians(5 + d_angle*y)
             cart_x = r * math.sin(phi) * math.cos(theta)
             cart_y = r * math.sin(phi) * math.sin(theta)
             cart_z = r * math.cos(phi)
+            #min_h = min(min_h, current)
+            #max_h = max(max_h, current)
+            #point_values.SetValue(y*nx+x,current)
             points.InsertNextPoint(cart_x, cart_y, cart_z)
 
+    print('ok')
     struct_grid = vtkStructuredGrid()
     struct_grid.SetDimensions(nx, ny, 1)
     struct_grid.SetPoints(points)
     struct_grid.GetPointData().SetScalars(point_values)
+    print('ok2')
 
     lut = vtkLookupTable()
     lut.SetNumberOfTableValues(6)
-    lut.SetTableValue(0, colors.GetColor4d("Green"))
-    lut.SetTableValue(1, colors.GetColor4d("Blue"))
+    lut.SetTableValue(0, colors.GetColor4d("Blue"))
+    lut.SetTableValue(1, colors.GetColor4d("Green"))
     lut.SetTableValue(2, colors.GetColor4d("Yellow"))
     lut.SetTableValue(3, colors.GetColor4d("Purple"))
     lut.SetTableValue(4, colors.GetColor4d("Black"))
-    lut.SetTableValue(5, colors.GetColor4d("Pink"))
+    lut.SetTableValue(5, colors.GetColor4d("White"))
     lut.Build()
+    print('ok3')
 
     mapper = vtkDataSetMapper()
     mapper.SetInputData(struct_grid)
     mapper.SetLookupTable(lut)
-    mapper.SetScalarRange(0, 5)
+    mapper.SetScalarRange(3, 9)# min_h, max_h)
     mapper.ScalarVisibilityOn()
 
+    print('ok4')
     actor = vtkActor()
     actor.SetMapper(mapper)
+
+    print('ok5')
 
     ren = vtkRenderer()
     ren.SetBackground(colors.GetColor3d("SlateGray"))
@@ -102,8 +113,11 @@ def main(values):
     style = vtkInteractorStyleTrackballCamera()
     iren.SetInteractorStyle(style)
 
+    print('ok6')
     iren.Initialize()
+    print('ok7')
     iren.Start()
+    print('ok8')
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ from vtkmodules.vtkRenderingCore import (
     vtkRenderer
 )
 
-# https://kitware.github.io/vtk-examples/site/Cxx/StructuredGrid/StructuredGrid/
+
 def main(values):
     nx = len(values)
     ny = len(values[0])
@@ -56,7 +56,7 @@ def main(values):
         for x in range(nx):
             current = values[x][y]
             r = r_terre + current
-            phi = math.radians(70 + d_angle*x)
+            phi = math.radians(45 + d_angle*x)
             theta = math.radians(90 + d_angle*y)
             cart_x = -r * math.sin(phi) * math.cos(theta)
             cart_z = r * math.sin(phi) * math.sin(theta)
@@ -81,20 +81,18 @@ def main(values):
     struct_grid.GetPointData().SetScalars(point_values)
 
     lut = vtkLookupTable()
-    #lut.SetNumberOfTableValues(11)
 
     lut.SetBelowRangeColor(0.529, 0.478, 1.000, 1.0)
-    #lut.SetBelowRangeColor(0.0, 0.0, 0.000, 1.0)
     lut.UseBelowRangeColorOn()
-    lut.SetHueRange(0.3, 0.15)
-    lut.SetValueRange(0.5, 1)
-    lut.SetSaturationRange(0.5, 0)
+    lut.SetHueRange(0.33, 0)
+    lut.SetValueRange(0.63, 1)
+    lut.SetSaturationRange(0.48, 0)
     lut.Build()
 
     mapper = vtkDataSetMapper()
     mapper.SetInputData(struct_grid)
     mapper.SetLookupTable(lut)
-    mapper.SetScalarRange(min_h, max_h-100)
+    mapper.SetScalarRange(min_h, 2000)
     mapper.ScalarVisibilityOn()
 
     actor = vtkActor()
@@ -109,8 +107,8 @@ def main(values):
     ren_win.AddRenderer(ren)
     ren_win.SetSize(600, 600)
 
-    ''' # pour enregistrer en image png
-    w2if = vtkWindowToImageFilter()
+    # pour enregistrer en image png
+    '''w2if = vtkWindowToImageFilter()
     w2if.SetInput(ren_win)
     ren_win.Render()
     w2if.Update()
@@ -118,8 +116,8 @@ def main(values):
     writer = vtkPNGWriter()
     writer.SetFileName("screenshot.png")
     writer.SetInputData(w2if.GetOutput())
-    writer.Write()
-    '''
+    writer.Write()'''
+
 
     iren = vtkRenderWindowInteractor()
     iren.SetRenderWindow(ren_win)
@@ -132,7 +130,6 @@ def main(values):
 
 
 if __name__ == "__main__":
-    # https://kitware.github.io/vtk-examples/site/Cxx/StructuredGrid/StructuredGrid/
 
     file1 = open('altitudes.txt', 'r')
     Lines = file1.readlines()

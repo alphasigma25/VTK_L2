@@ -46,9 +46,9 @@ def find_coord(x, y, values, points, point_values, h_extr, islake=False):
     h_max = max(h_extr[1], current)
     if islake:
         point_values.SetValue(y*len(values)+x, 0)
-    else :
+    else:
         point_values.SetValue(y*len(values)+x, current)
-    return (h_min,h_max)
+    return (h_min, h_max)
 
 def main(values):
     nx = len(values)
@@ -83,11 +83,11 @@ def main(values):
 
     for y in range(1, ny-1):
         for x in range(1, nx-1):
-            #err = 0
-            #for i in range(-1,2):
-            #    for j in range(-1,2):
-            #        err = abs(values[i][j] - values[x][y])
-            h_extr = find_coord(x,y,values, points, point_values, (min_h,max_h), True)
+            err = 0
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    err = abs(values[i][j] - values[x][y])
+            h_extr = find_coord(x, y, values, points, point_values, (min_h, max_h), False)
             min_h = h_extr[0]
             max_h = h_extr[1]
         #if y%30 == 0: print(y//30)
@@ -102,8 +102,9 @@ def main(values):
     lut = vtkLookupTable()
     lut.SetNumberOfTableValues(9)
 
-    #lut.SetBelowRangeColor(0.529, 0.478, 1.000, 1.0)
-    lut.SetBelowRangeColor(0.0, 0.0, 0.000, 1.0)
+    lut.SetBelowRangeColor(0.529, 0.478, 1.000, 1.0)
+    #lut.SetBelowRangeColor(0.0, 0.0, 0.000, 1.0)
+    lut.UseBelowRangeColorOn()
     lut.SetTableValue(0, 0.612, 0.757, 0.443, 1.0)
     lut.SetTableValue(1, 0.545, 0.741, 0.412, 1.0)
     lut.SetTableValue(2, 0.737, 0.812, 0.522, 1.0)
@@ -154,13 +155,13 @@ def main(values):
 if __name__ == "__main__":
     # https://kitware.github.io/vtk-examples/site/Cxx/StructuredGrid/StructuredGrid/
 
-    file1 = open('altitudes2.txt', 'r')
+    file1 = open('altitudes.txt', 'r')
     Lines = file1.readlines()
     Lines = Lines[1:]
     Valeurs = []
     for line in Lines:
         # Supprimer l'espace a la fin
-        #line = line[:-2]
+        line = line[:-2]
         Valeurs.append([float(el) for el in line.split(' ')])
 
     main(Valeurs)

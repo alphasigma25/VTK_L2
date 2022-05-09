@@ -42,8 +42,6 @@ def main(values):
     point_values = vtkDoubleArray()
     point_values.SetNumberOfComponents(1)
     point_values.SetNumberOfTuples(nx * ny)
-    for i in range(nx*ny):
-        point_values.SetValue(i,2)
 
     min_h = math.inf
     max_h = 0.0
@@ -63,16 +61,21 @@ def main(values):
             cart_y = r * math.cos(phi)
             min_h = min(min_h, current)
             max_h = max(max_h, current)
-            err = 1000
+
+            lac = True
             if 0 < x < nx - 1 and 0 < y < ny - 1:
-                err = 0
                 for i in range(x-1, x+2):
-                    for j in range(y-1, y+2):
-                        err = max(err, abs(values[i][j] - values[x][y]))
-            if err == 0:
+                    for j in range(y-1, y+2, 2):
+                        if abs(values[i][j] - values[x][y]) != 0:
+                            lac = False
+            else:
+                lac = False
+
+            if lac:
                 point_values.SetValue(y * nx + x, 0)
             else:
                 point_values.SetValue(y*nx+x, current)
+
             points.InsertNextPoint(cart_x, cart_y, cart_z)
 
     struct_grid = vtkStructuredGrid()
@@ -117,7 +120,6 @@ def main(values):
     writer.SetFileName("screenshot.png")
     writer.SetInputData(w2if.GetOutput())
     writer.Write()'''
-
 
     iren = vtkRenderWindowInteractor()
     iren.SetRenderWindow(ren_win)
